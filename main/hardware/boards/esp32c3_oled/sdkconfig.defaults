@@ -1,0 +1,57 @@
+# ──────────────────────────────────────────────────────────────
+# Board overlay: ESP32-C3 with 0.42" OLED. Overlays the root sdkconfig.defaults
+# and wins on conflicts (composed in the root CMakeLists.txt).
+#
+# This file is what makes the board a complete platform rather than a pinout:
+# the root defaults hold what the APPLICATION needs and assert nothing about
+# hardware, so the flash and the partition table below are this board's to
+# state, not values it inherits.
+#
+# The chip itself is NOT set here. IDF resolves IDF_TARGET in the same early
+# pass that cannot see -DBOARD (the note in main/CMakeLists.txt), so a
+# CONFIG_IDF_TARGET line in this file is read too late and silently loses to
+# whatever the existing sdkconfig says. Select the chip the ordinary way:
+#   idf.py -DBOARD=esp32c3_oled set-target esp32c3
+# ──────────────────────────────────────────────────────────────
+
+# The USB-C port is the chip's own USB Serial/JTAG peripheral, not a UART
+# bridge, so console output has to reach it or `idf.py monitor` shows nothing.
+#
+# EXPERIMENT (diag/packet-loss): it reaches it as the SECONDARY console, not the
+# primary. The primary console is a full VFS driver whose write blocks waiting for
+# FIFO space; the secondary is a best-effort ROM path that drops instead of
+# waiting. Making USB the primary is what stalls whichever task logged.
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+CONFIG_ESP_CONSOLE_SECONDARY_USB_SERIAL_JTAG=y
+
+# ── Flash ──────────────────────────────────────────────────────
+# 4 MB, wired for DIO on these boards, and the C3's SPI flash tops out at
+# 80 MHz — same speed as the DevKit, safer mode.
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
+CONFIG_ESPTOOLPY_FLASHMODE_DIO=y
+
+# ── Partition table ────────────────────────────────────────────
+# This board's own, sized to the 4 MB above. It happens to be identical to the
+# DevKit's, because both boards carry 4 MB — a coincidence of the hardware, not
+# a shared file. The path is relative to the project root, and the file sits
+# beside this one so a board is one folder.
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="main/hardware/boards/esp32c3_oled/partitions.csv"
+
+# ── RAM ────────────────────────────────────────────────────────
+# The C3 has one 400 KB SRAM that IRAM and DRAM are carved from, so every
+# function placed in IRAM is heap the application does not get. With WiFi, the
+# BLE observer and the relay's TLS session all up at once, the defaults leave
+# the TLS handshake short (mbedtls: PSA_ERROR_INSUFFICIENT_MEMORY). Moved to
+# flash instead, in order of size:
+#   • the BLE controller (over 20 KB). BLE stalls while flash is erased — an
+#     OTA write, an NVS commit — which a passive scan survives by missing a few
+#     advertisements. Flash auto-suspend would avoid that, but it works only on
+#     specific flash chips, and these boards do not say which one they carry.
+#   • WiFi's IRAM fast paths. Throughput this device does not need.
+# and WiFi keeps fewer pre-allocated receive buffers; the rest are dynamic.
+CONFIG_BT_CTRL_RUN_IN_FLASH_ONLY=y
+CONFIG_ESP_WIFI_IRAM_OPT=n
+CONFIG_ESP_WIFI_RX_IRAM_OPT=n
+CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM=6

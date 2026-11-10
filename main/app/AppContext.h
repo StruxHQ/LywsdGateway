@@ -5,7 +5,8 @@
 #include "StruxProvider.h"
 #include "SystemManager.h"
 #include "DeviceDoc.h"
-#include "LedManager/LedManager.h"
+#include "SensorManager/SensorManager.h"
+#include "StatusDisplayManager/StatusDisplayManager.h"
 
 // The application layer's context: owns this product's managers and answers AppProvider.
 //
@@ -37,16 +38,19 @@ public:
         strux_.getSystemManager().SetDocumentation(
             DeviceDoc::DESCRIPTION, DeviceDoc::INSTRUCTIONS);
 
-        ledManager_.Init();
+        sensorManager_.Init();
+        statusDisplayManager_.Init();
     }
 
     StruxProvider& getStrux() override { return strux_; }
     BoardContext& getBoard() override { return board_; }
-    LedManager& getLedManager() override { return ledManager_; }
+    SensorManager& getSensorManager() override { return sensorManager_; }
+    StatusDisplayManager& getStatusDisplayManager() override { return statusDisplayManager_; }
 
 private:
     BoardContext& board_;
     StruxProvider& strux_;
 
-    LedManager ledManager_{*this};
+    SensorManager sensorManager_{*this};
+    StatusDisplayManager statusDisplayManager_{*this};
 };

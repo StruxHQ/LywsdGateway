@@ -20,11 +20,13 @@ add_executable(strux-host-tests
     test_console_args.cpp
     test_channel_table.cpp
     test_connection_state.cpp
+    test_climate_advertisement.cpp
 )
 
 target_include_directories(strux-host-tests PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/../main/lib/protocol
+    ${CMAKE_CURRENT_SOURCE_DIR}/../main/lib/sensors
 )
 
 if(MSVC)

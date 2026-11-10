@@ -82,3 +82,39 @@ CONFIG_LWIP_MAX_SOCKETS=16
 # espressif/mdns 1.15 the component refuses to configure when the CLI is on but the
 # console component is not in the build.
 CONFIG_MDNS_ENABLE_CONSOLE_CLI=n
+
+# BLE, for listening to climate sensor advertisements (app/SensorManager).
+# NimBLE rather than Bluedroid: it is the smaller host, and this application only
+# ever OBSERVES — it scans passively and never connects, advertises or pairs — so
+# every other role is compiled out.
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_BT_NIMBLE_ROLE_OBSERVER=y
+CONFIG_BT_NIMBLE_ROLE_CENTRAL=n
+CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=n
+CONFIG_BT_NIMBLE_ROLE_BROADCASTER=n
+
+# ...and every buffer sized for connections goes down to the floor. Defaults left
+# 67 KB of heap to the BLE stack, which starved the relay's TLS handshake on an
+# ESP32-C3 (mbedtls_ssl_setup: PSA_ERROR_INSUFFICIENT_MEMORY). An observer receives
+# advertising reports and nothing else: no ACL data, no pairing, no bonds, no
+# extended advertising (pvvx, ATC1441 and BTHome all use legacy advertisements).
+CONFIG_BT_NIMBLE_SECURITY_ENABLE=n
+CONFIG_BT_NIMBLE_50_FEATURE_SUPPORT=n
+CONFIG_BT_NIMBLE_WHITELIST_SIZE=1
+CONFIG_BT_NIMBLE_MSYS_1_BLOCK_COUNT=4
+CONFIG_BT_NIMBLE_MSYS_2_BLOCK_COUNT=4
+CONFIG_BT_NIMBLE_TRANSPORT_ACL_FROM_LL_COUNT=2
+CONFIG_BT_NIMBLE_TRANSPORT_EVT_COUNT=12
+CONFIG_BT_NIMBLE_TRANSPORT_EVT_DISCARD_COUNT=4
+CONFIG_BT_CTRL_BLE_MAX_ACT=1
+# The controller's duplicate cache exists to drop repeats, which is the opposite of
+# what a sensor listener wants (filter_duplicates is 0 in SensorManager).
+CONFIG_BT_CTRL_BLE_SCAN_DUPL=n
+
+# TLS buffers allocated per record instead of held for the session's life. The relay
+# pipe is one long-lived wss:// connection, so a fixed 16 KB receive buffer would be
+# reserved the whole time for records that are almost always small.
+CONFIG_MBEDTLS_DYNAMIC_BUFFER=y
+CONFIG_MBEDTLS_DYNAMIC_FREE_CONFIG_DATA=y
+CONFIG_MBEDTLS_DYNAMIC_FREE_CA_CERT=y

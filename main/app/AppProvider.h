@@ -12,7 +12,8 @@
 
 class BoardContext;
 class StruxProvider;
-class LedManager;
+class SensorManager;
+class StatusDisplayManager;
 
 class AppProvider
 {
@@ -24,5 +25,6 @@ public:
     virtual BoardContext& getBoard() = 0;
 
     // ── This application's own managers ──
-    virtual LedManager& getLedManager() = 0;
+    virtual SensorManager& getSensorManager() = 0;
+    virtual StatusDisplayManager& getStatusDisplayManager() = 0;
 };

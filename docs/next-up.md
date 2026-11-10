@@ -9,7 +9,8 @@ Last updated 2026-11-10.
 
 ## Now
 
-**Gateway for Xiaomi LYWSD03MMC sensors.** Listen for BLE advertisements from
-multiple LYWSD03MMC thermometers and forward temperature, humidity and battery to
-the strux relay as metrics through `TelemetryManager`. Replaces the `LedManager`
-worked example.
+**Prove the sensor gateway on hardware.** `SensorManager` (NimBLE passive scan,
+pvvx / ATC1441 / BTHome v2 / stock MiBeacon) is built and its parser host-tested,
+but has not yet run on the board: flash `esp32c3_oled`, check that `sensor list`
+sees the sensors, that WiFi and the relay link survive BLE coexistence, and that
+`climate` points arrive in InfluxDB.

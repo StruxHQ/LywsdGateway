@@ -59,7 +59,7 @@ Strux/
 │   ├── app/                           # THE APPLICATION — this is what a fork writes
 │   │   ├── AppContext.h               # Owns this product's managers
 │   │   ├── AppProvider.h              # Peers + getStrux() + getBoard()
-│   │   └── LedManager/                # Worked example — delete when you have real ones
+│   │   └── StatusDisplayManager/      # WiFi + relay status on the OLED
 │   ├── hardware/                      # THE BOARD — depends on nothing above it
 │   │   ├── boards/                    # One folder per target board (-DBOARD=<name>)
 │   │   │   ├── esp32_devkit/          # Generic ESP32 DevKit (default)
@@ -69,7 +69,8 @@ Strux/
 │   │   │   │   ├── sdkconfig.defaults # This board's hardware: flash size/mode/speed,
 │   │   │   │   │                      # console routing, the table below (REQUIRED)
 │   │   │   │   └── partitions.csv     # This board's partition layout
-│   │   │   └── esp32c3_supermini/     # ESP32-C3 SuperMini (RISC-V, USB-C)
+│   │   │   ├── esp32c3_supermini/     # ESP32-C3 SuperMini (RISC-V, USB-C)
+│   │   │   └── esp32c3_oled/          # ESP32-C3 with 0.42" OLED
 │   │   │       └── ...                # Same six files
 │   │   ├── interfaces/                # Role interfaces (application vocabulary)
 │   │   │   ├── BoardProvider.h        # The roles every board owes
@@ -98,7 +99,7 @@ Strux/
 
 **Rule of thumb:** if the code changes when you swap the board, it belongs in `hardware/boards/<name>/`. If it's a chip driver several boards could use, it belongs in `hardware/drivers/`. If it changes when you add a feature to this product, it belongs in `app/`. If every fork would want it, it belongs in `strux/`.
 
-Dependencies run one way: the board depends on nothing, the framework depends on the board's *nothing* (it never touches hardware), and the application depends on both. Anything the framework needs from the application arrives by registration — a command, a setting, a telemetry point — never by reaching upward. `app/LedManager/` is the worked example of all three edges at once.
+Dependencies run one way: the board depends on nothing, the framework depends on the board's *nothing* (it never touches hardware), and the application depends on both. Anything the framework needs from the application arrives by registration — a command, a setting, a telemetry point — never by reaching upward. `app/StatusDisplayManager/` is the worked example of all three edges at once.
 
 ### Multiple boards
 
@@ -108,6 +109,7 @@ The target board is selected at configure time with `-DBOARD=<name>` (default: `
 |---|---|---|
 | `esp32_devkit` | ESP32-WROOM-32 (Xtensa) | Default. Built-in LED on GPIO2, active high |
 | `esp32c3_supermini` | ESP32-C3 (RISC-V) | The cheap ~18×22 mm USB-C board. Blue LED on GPIO8, active **low**; console on the chip's native USB Serial/JTAG |
+| `esp32c3_oled` | ESP32-C3 (RISC-V) | The C3 with a 0.42" 72x40 SSD1306 OLED on I2C (SDA GPIO5, SCL GPIO6, 0x3C). Blue LED on GPIO8, active **low** |
 
  Only the selected board folder is put on the include path, so application code just includes `BoardConfig.h` or `BoardContext.h` and gets the right one. The application never changes between boards: it compiles against the `BoardContext` class's surface, and each board makes itself compatible — with real hardware or a mock. Every board implements [`BoardProvider`](main/hardware/interfaces/BoardProvider.h), the list of roles a board owes, so a board that forgets one fails in the board rather than at some call site. To support a new board:
 
@@ -205,7 +207,7 @@ StruxContext (the framework — answers StruxProvider)
 └── TelemetryManager      — Measurements out through the relay
 
 AppContext (the top — answers AppProvider, holds Board& and StruxProvider&)
-└── LedManager            — Worked example; replace with your product's managers
+└── StatusDisplayManager  — WiFi + relay status on the display
 ```
 
 ### Boot sequence (main.cpp)
@@ -323,13 +325,13 @@ This is a template — copy it, rename it, and build on top of it:
 1. **Rename the project** in `CMakeLists.txt` (`project(YourProject)`), `.github/workflows/release.yml`, and `frontend/src/config.ts` (dev-server host + GitHub repo for the release check) — the UI itself needs no renaming: it shows the device name and project name reported by the firmware
 2. **Update `BoardConfig.h`** (or add a new board folder under `hardware/boards/`) with your board's pin assignments
 3. **Add hardware drivers** in `hardware/drivers/` and instantiate them in the board's `BoardContext` class
-4. **Add application logic** as new managers in `app/` — and delete `app/LedManager/`, which is only there as a worked example. Nothing in `strux/` needs editing to add a feature.
+4. **Add application logic** as new managers in `app/`. Nothing in `strux/` needs editing to add a feature.
 5. **Extend the web UI** — add pages in `frontend/src/pages/`, register routes in the sidebar
 6. **Add settings** by declaring typed setting members in the owning manager and registering them in its `Init()` (see [Settings](#settings))
 
 ### Adding a New Manager
 
-Almost always an *application* manager — see [`app/LedManager/`](main/app/LedManager/) for the worked example:
+Almost always an *application* manager — see [`app/StatusDisplayManager/`](main/app/StatusDisplayManager/) for the worked example:
 
 1. Create a new directory under `app/YourManager/`
 2. Implement your manager class, accepting `AppProvider&` in the constructor. It reaches the framework through `services.getStrux()` and the hardware through `services.getBoard()`

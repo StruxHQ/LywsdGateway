@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import {
-  LightbulbIcon,
+  ThermometerIcon,
   TerminalIcon,
   SquareTerminalIcon,
   SettingsIcon,
@@ -28,8 +28,8 @@ import { ThemeToggle } from "@/components/ThemeToggle"
 // The nav, and the first entry is the product. "home" is a fixed id rather than the
 // feature's name so that a fork replacing this template's demo feature replaces the
 // CONTENTS of HomePage.tsx and the title and icon on this line — a bookmark to "/"
-// still lands on whatever that product's own screen is. LED is what Strux ships as
-// its worked example; a real product's first entry is its own thing.
+// still lands on whatever that product's own screen is. Here it is the climate
+// sensors the gateway hears, with the device display mirrored below them.
 //
 // There is no "Device" entry: a chip name and a heap figure are reference material
 // you go looking for, not a destination, so they live behind the footer instead of
@@ -41,7 +41,7 @@ import { ThemeToggle } from "@/components/ThemeToggle"
 // printed, the other is what you asked it. Naming the difference in the nav is
 // cheaper than finding it out by clicking.
 const navItems = [
-  { title: "LED", icon: LightbulbIcon, page: "home" as const },
+  { title: "Sensors", icon: ThermometerIcon, page: "home" as const },
   {
     title: "Console",
     hint: "Device logs (stdout)",

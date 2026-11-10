@@ -740,14 +740,19 @@ class BackendService {
     return this.send("system reboot")
   }
 
-  async getLed(): Promise<LedState> {
-    return this.send<LedState>("led get")
+  async getDisplay(): Promise<DisplayState> {
+    return this.send<DisplayState>("display get")
   }
 
-  /** Turns the link indication on or off. Omitted fields are left alone by the
-   *  device, so `{}` is a no-op that still reports the current state. */
-  async setLed(params: { enabled?: boolean }): Promise<LedState> {
-    return this.send<LedState>("led set", params)
+  async getSensors(): Promise<Sensor[]> {
+    const res = await this.send<{ sensors: Sensor[] }>("sensor list")
+    return res.sensors
+  }
+
+  /** An empty name removes it. */
+  async nameSensor(mac: string, name: string): Promise<void> {
+    const res = await this.send<{ ok: boolean; error?: string }>("sensor name", { mac, name })
+    if (!res.ok) throw new Error(res.error ?? "sensor name failed")
   }
 
   /** Throws on connection failure. On success stores the session key and marks
@@ -1057,19 +1062,33 @@ export interface DeviceInfo {
   deviceTime: string
 }
 
-// ── The LED, this template's worked example ──────────────────────────────────
-//
-// A product built from Strux deletes this pair along with LedManager and puts its
-// own feature's commands here — the demo is the only thing in this file that is not
-// framework.
+// ── The status display (main/app/StatusDisplayManager) ───────────────────────
 
-export interface LedState {
-  /** Whether the LED is showing the relay link at all. */
-  enabled: boolean
-  /** The relay pipe's state — what the LED is indicating. */
-  connected: boolean
-  /** The pin, which is `enabled && connected`. */
-  on: boolean
+// ── Climate sensors (main/app/SensorManager) ─────────────────────────────────
+
+/** One sensor heard over BLE. Values are absent when its format does not carry
+ *  them — and always absent when `encrypted` (stock Xiaomi firmware). */
+export interface Sensor {
+  mac: string
+  /** Empty when the user has not named it. */
+  name: string
+  format: "pvvx" | "atc1441" | "bthome" | "mibeacon"
+  encrypted: boolean
+  temperature?: number
+  humidity?: number
+  battery?: number
+  voltage?: number
+  rssi: number
+  /** Seconds since its last advertisement. */
+  lastSeen: number
+}
+
+export interface DisplayState {
+  /** Characters per row. */
+  columns: number
+  rows: number
+  /** One string per row, top to bottom — exactly what the OLED shows. */
+  lines: string[]
 }
 
 export interface UpdateStatus {

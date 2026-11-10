@@ -28,6 +28,8 @@ jobs:
             target: esp32
           - board: esp32c3_supermini
             target: esp32c3
+          - board: esp32c3_oled
+            target: esp32c3
 
     steps:
       - name: Checkout

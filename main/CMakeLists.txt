@@ -38,7 +38,8 @@ set(STRUX_SOURCES
 
 # ── The application. This is the list a fork owns.
 set(APP_SOURCES
-    "app/LedManager/LedManager.cpp"
+    "app/SensorManager/SensorManager.cpp"
+    "app/StatusDisplayManager/StatusDisplayManager.cpp"
 )
 
 set(SOURCE_FILES_LIST
@@ -58,6 +59,7 @@ set(INCLUDE_DIRS_LIST
     "lib/json"
     "lib/protocol"
     "lib/system"
+    "lib/sensors"
     "strux"
     "strux/WebAssets"
     "strux/NetworkManager"
@@ -73,7 +75,8 @@ set(INCLUDE_DIRS_LIST
     "strux/TimeManager"
     "hardware"
     "app"
-    "app/LedManager"
+    "app/SensorManager"
+    "app/StatusDisplayManager"
 )
 
 set(COMPONENT_REQUIRES
@@ -89,6 +92,9 @@ set(COMPONENT_REQUIRES
     esp_partition
     spi_flash
     esp_driver_gpio
+    esp_driver_i2c
+    # NimBLE, for listening to the climate sensors (app/SensorManager).
+    bt
     mdns
     # Only to report the DFS bounds in `system info` — the scaling itself is
     # configured by startup code, see CONFIG_PM_ENABLE in sdkconfig.defaults.
