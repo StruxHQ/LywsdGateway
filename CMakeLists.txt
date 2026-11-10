@@ -150,6 +150,11 @@ if(NOT STRUX_ALLOW_SDKCONFIG_DRIFT)
         if(NOT _strux_pos EQUAL -1)
             continue()
         endif()
+        # kconfgen never writes CONFIG_X=n; it writes the disabled form instead.
+        if("${_strux_want_${_strux_key}}" STREQUAL "${_strux_key}=n"
+           AND "${_strux_actual}" MATCHES "\n# ${_strux_key} is not set\n")
+            continue()
+        endif()
         # Say what it is instead, so the message is diagnosable without a diff.
         if("${_strux_actual}" MATCHES "\n${_strux_key}=([^\n]*)\n")
             set(_strux_is "it is ${_strux_key}=${CMAKE_MATCH_1}")

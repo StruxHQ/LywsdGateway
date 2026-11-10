@@ -77,3 +77,8 @@ CONFIG_PM_DFS_INIT_AUTO=y
 # nothing for the relay's outbound socket, mDNS, SNTP or DHCP. A fork that adds a
 # second listener should read this before trusting the default again.
 CONFIG_LWIP_MAX_SOCKETS=16
+
+# mDNS's console CLI is off: nothing here registers esp_console commands, and from
+# espressif/mdns 1.15 the component refuses to configure when the CLI is on but the
+# console component is not in the build.
+CONFIG_MDNS_ENABLE_CONSOLE_CLI=n

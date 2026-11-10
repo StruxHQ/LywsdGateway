@@ -97,6 +97,11 @@ void WiFiInterface::ApplyStaConfig(const char* ssid, const char* password)
     config.sta.pmf_cfg.capable = true;
     config.sta.pmf_cfg.required = false;
 
+    // Offer both SAE password derivations. `config = {}` leaves only hunting-and-
+    // pecking, and a WPA3 AP that insists on hash-to-element (6 GHz and Wi-Fi 7
+    // routers often apply it to every band) times out the SAE commit: reason 2 again.
+    config.sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH;
+
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &config));
 }
 
